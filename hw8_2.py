@@ -52,8 +52,37 @@ def build_doc_word_matrix(doclist, n):
         ngramlist: list of strings, the list of ngrams that correspond to the columns in docword
     '''
     # 1. Create the cleaned string for each doc (use read_and_clean_doc)
-
+    cleaned_docs = []
+    for doc in doclist:
+        cleaned_docs.append(read_and_clean_doc(doc))
     # 2. Create and use ngram lists to build the doc word matrix
+    ngram = []
+    for stringvalues in cleaned_docs:
+        ngram.append(get_ngrams(stringvalues,n))
+    #ngramlist = list(set(ngram[0]))
+    #ngramlist = ngram
+
+    #ngramlist.sort()
+    #ngramlist = list(set(ngramlist))
+  
+    setNgrams = set()
+    [setNgrams.update(ngramL) for ngramL in ngram]
+    ngramlist=sorted(list(setNgrams))#finally, convert to list to be correct output type
+    docword = np.zeros((len(doclist), len(ngramlist)))
+
+    for i in range(len(doclist)):
+        testvar = cleaned_docs[i]
+        newlist =[]
+        for k in range(len(testvar)- n + 1):
+            newlist.append(testvar[k:k+n])
+
+        for element in newlist:
+            docword[i,ngramlist.index(element)]+=1
+
+    
+
+   
+
 
     return docword, ngramlist
 
@@ -70,6 +99,8 @@ def build_tf_matrix(docword):
     '''
 
     # fill in
+    
+    tf = docword / (np.sum(docword,axis=1)[:,np.newaxis])
     return tf
 
 
@@ -86,6 +117,9 @@ def build_idf_matrix(docword):
              
     '''
     # fill in
+
+    idf = np.log10(docword.shape[0]/(np.sum(docword>0,axis=0).reshape(1,-1)))
+    
     return idf
 
 
@@ -100,6 +134,13 @@ def build_tfidf_matrix(docword):
     '''
 
     # fill in
+    tf = build_tf_matrix(docword)
+
+    # build the inverse document frequency matrix
+    idf = build_idf_matrix(docword)
+
+    # calculate the tf-idf matrix
+    tfidf = tf * idf
     return tfidf
 
 
@@ -119,6 +160,14 @@ def find_distinctive_ngrams(docword, ngramlist, doclist):
     # you might find numpy.argsort helpful for solving this problem:
     # https://docs.scipy.org/doc/numpy/reference/generated/numpy.argsort.html
     # HINT: the smallest three of -docword correspond to largest 3 of docword
+
+    tfidf = build_tfidf_matrix(docword)
+    distinctive_words = {}
+    for i, doc in enumerate(doclist):
+        sorted_indices = np.argsort(-tfidf[i])
+        top_ngram_indices = sorted_indices[:3]
+        top_ngrams = [ngramlist[idx] for idx in top_ngram_indices]
+        distinctive_words[doc] = top_ngrams
 
     return distinctive_words
 

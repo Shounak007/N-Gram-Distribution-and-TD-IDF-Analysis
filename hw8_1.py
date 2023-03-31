@@ -56,12 +56,19 @@ def get_dict(filename, n):
     '''
     # 1. get lines and combine them to a set of keys
     #   fill in
+    lines = get_formatted_text(filename)
+    ngrams = set()
+    for line in lines:
+        ngrams.update(get_ngrams(line, n))
 
     # 2. use the set to initialize a dict
     #   fill in
-
+    ngram_dict = dict.fromkeys(ngrams, 0)
     # 3. update the values of the dict
     #   fill in
+    for line in lines:
+        for k in range(len(line) - n + 1):
+            ngram_dict[line[k : k + n]]+= 1
 
     return ngram_dict
 
@@ -86,9 +93,12 @@ def top_N_common(filename, N, n):
     
     # 1. sort a dict
     # fill in
+    ngram_dict = get_dict(filename, n)
+    sorted_dict = dict(sorted(ngram_dict.items(), key=lambda item: (item[1], item[0]),reverse=True))
 
     # 2. get the top N common n-grams from the sorted dict and return it
     #   fill in
+    common_N = dict(list(sorted_dict.items())[:N])
 
 
     return common_N
@@ -129,13 +139,14 @@ def dict_union(listOfDicts):
            (4) you can follow the step1,2 to help you fill the 'dict_union' funtion if you want.
     '''
     # you can firstly initalize an empty set by: "union_ngrams = set()" and later convert it to a list
-
+    union_ngrams = set()
     # 1. update the set by using set.update()
     # fill in
-
+    for d in listOfDicts:
+        union_ngrams.update(d.keys())
     # 2. sort the set by converting it to a list and then sort
     # fill in
-
+    union_ngrams = sorted(list(union_ngrams))
     return union_ngrams
 
 
@@ -172,10 +183,19 @@ def compare_langs(test_file, langFiles, N, n=3):
     '''
     # 1. get mystery top N using 'top_N_common' function
     # fill in
-
+    myst_top_ngrams = set([key for key in top_N_common(test_file,N,n)])
     # 2. cardinalities of intersections, use 'intersection()' and 'top_N_common' function
     # fill in
-
+    max_matches = 0
+    lang_match = ""
+    
+    for lang_file in langFiles:
+        lang_top_ngrams = set([key for key in top_N_common(lang_file,N,n)])
+        matches = len(myst_top_ngrams.intersection(lang_top_ngrams))
+        if matches > max_matches:
+            max_matches = matches
+            lang_match = lang_file
+            
     return lang_match # it's a string
 
 
